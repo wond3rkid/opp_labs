@@ -17,20 +17,23 @@ void fill_vector_initial_approximation(double *approximation, size_t N);
 void fill_matrix_vector(double **matrix, double *vector, size_t N);
 
 // проверка решена ли система == достигнуто ли искомое приближение эпсилон
-bool is_solved(double **matrix, double *vector, double *curr_approximation, size_t N);
+bool is_solved(const double **matrix, double *vector, double *curr_approximation, size_t N);
 
 // перемножение матрицы на вектор и возвращение нового вектора
-
-double *multiplication_matrix_vector(double **matrix, double *curr_approximation, size_t N);
+double *multiplication_matrix_vector(const double **matrix, double *curr_approximation, size_t N);
 
 // вычитание из вектора с результатом перемножения матрицы и вектора вектора свободных значений b
 void subtracting_vectors(double *curr, double *vector, size_t N);
 
-double  **multiplication_tau_matrix(double **matrix, size_t N;
+// умножение матрицы на число Тау. Возвращает новую матррицу
+double *multiplication_tau_vector(const double *vector, size_t N);
 
+// считает норму вектора
 double get_vector_sqrt(double *vector, size_t N);
 
-double *iterationMethod(double **matrix_A, double *matrix_B, size_t N);
+double *get_next_x(const double **matrix, const double *vector, double *curr_approximation, size_t N);
+
+double *iterationMethod(const double **matrix_A, double *matrix_B, size_t N);
 
 void do_algorithm(size_t N);
 
