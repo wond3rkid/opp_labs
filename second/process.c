@@ -1,4 +1,4 @@
-
+#include "math.h"
 #include "process.h"
 
 void fill_vector_initial_approximation(double *approximation, size_t N) {
@@ -29,13 +29,13 @@ double *multiplication_matrix_vector(const double **matrix, double *curr_approxi
     return res;
 }
 
-void subtracting_vectors(double *curr, double *vector, size_t N) {
+void subtracting_vectors(double *curr, const double *vector, size_t N) {
     for (int i = 0; i < N; i++) {
         curr[i] -= vector[i];
     }
 }
 
-double *multiplication_tau_vector(const double *vector, size_t N) {
+double *multiplication_tau_vector(const const double *vector, size_t N) {
     double *result = malloc(sizeof(result) * N);
     for (int i = 0; i < N; i++) {
         result[i] = vector[i] * Tau;
@@ -43,15 +43,15 @@ double *multiplication_tau_vector(const double *vector, size_t N) {
     return result;
 }
 
-double get_vector_sqrt(double *vector, size_t N) {
+double get_vector_sqrt(const double *vector, size_t N) {
     double ans = 0;
     for (int i = 0; i < N; i++) {
         ans += vector[i] * vector[i];
     }
-    return powl(ans, 0.5);
+    return (double) pow(ans, 0.5);
 }
 
-bool is_solved(const double **matrix, double *vector, double *curr_approximation, size_t N) {
+bool is_solved(const double **matrix, const double *vector, double *curr_approximation, size_t N) {
     double numerator_sqrt = get_vector_sqrt(vector, N);
     double *denominator = multiplication_matrix_vector(matrix, curr_approximation, N);
     subtracting_vectors(denominator, vector, N);
@@ -72,15 +72,31 @@ double *get_next_x(const double **matrix, const double *vector, double *curr_app
     return curr_approximation;
 }
 
-void do_algorithm(size_t N) {
+void preparation_perfomance_free(size_t N) {
+    double **matrix = malloc(sizeof(*matrix) * N);
+    for (int i = 0; i < N; i++) {
+        matrix[i] = malloc(sizeof(matrix[i]) * N);
+    }
+    double *vector = malloc(sizeof(vector) * N);
+    fill_matrix_vector(matrix, vector, N);
+    double *initial_approximation = malloc(sizeof(vector) * N);
+    fill_vector_initial_approximation(initial_approximation, N);
+    for (int i = 0; i < N; i++) {
+        free(matrix[i]);
+    }
+    free(matrix);
+    free(vector);
+}
 
+void solve_equations(const double **matrix, const double *vector, double *initial_approximation, size_t N) {
+    while (!is_solved(matrix, vector, initial_approximation, N)) {
 
-
+    }
 }
 
 
 void print_result(double *result, size_t N) {
     for (size_t i = 0; i < N; i++) {
-        printf("res[i] = %d\n", result[i]);
+        printf("res[i] = %f\n", result[i]);
     }
 }
