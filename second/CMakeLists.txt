@@ -8,3 +8,5 @@ add_executable(second
         process.h
         process.c
 )
+#m - math.h
+target_link_libraries(second m)

@@ -32,8 +32,6 @@ double get_vector_sqrt(const double *vector, size_t N);
 
 double *get_next_x(const double **matrix, const double *vector, double *curr_approximation, size_t N);
 
-double *iterationMethod(const double **matrix_A, double *matrix_B, size_t N);
-
 void preparation_perfomance_free(size_t N);
 
 void solve_equations(const double **matrix, const double *vector, double *initial_approximation, size_t N);
