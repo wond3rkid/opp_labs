@@ -6,8 +6,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#define Epsilon 0,00001
-#define Tau 0.01
+#define Epsilon 0.00001
+#define Tau 0.00001
 
 // заполнение вектора с начальным приближением
 void fill_vector_initial_approximation(double *approximation, size_t N);
