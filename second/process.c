@@ -55,9 +55,7 @@ bool is_solved(const double **matrix, const double *vector, double *curr_approxi
     double numerator_sqrt = get_vector_sqrt(vector, N);
     double *denominator = multiplication_matrix_vector(matrix, curr_approximation, N);
     subtracting_vectors(denominator, vector, N);
-    print_result(denominator, N);
     double denominator_sqrt = get_vector_sqrt(denominator, N);
-    print_result(vector, N);
     free(denominator);
     return denominator_sqrt / numerator_sqrt < Epsilon;
 }
@@ -91,7 +89,6 @@ void preparation_perfomance_free(size_t N) {
 void solve_equations(const double **matrix, const double *vector, double *initial_approximation, size_t N) {
     do {
         get_next_x(matrix, vector, initial_approximation, N);
-        printf("\n");
     } while (!is_solved(matrix, vector, initial_approximation, N));
 }
 
