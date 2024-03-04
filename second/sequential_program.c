@@ -1,9 +1,9 @@
 #include "math.h"
-#include "process.h"
+#include "sequential_program.h"
 
 void fill_vector_initial_approximation(double *approximation, size_t N) {
     for (int i = 0; i < N; i++) {
-        approximation[i] = 10;
+        approximation[i] = 0;
     }
 }
 

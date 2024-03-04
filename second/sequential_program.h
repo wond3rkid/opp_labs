@@ -1,5 +1,5 @@
-#ifndef SECOND_PROCESS_H
-#define SECOND_PROCESS_H
+#ifndef SECOND_SEQUENTIAL_PROGRAM_H
+#define SECOND_SEQUENTIAL_PROGRAM_H
 
 #include <stdio.h>
 #include <malloc.h>
@@ -38,4 +38,4 @@ void solve_equations(const double **matrix, const double *vector, double *initia
 
 void print_result(double *res, size_t N);
 
-#endif //SECOND_PROCESS_H
+#endif //SECOND_SEQUENTIAL_PROGRAM_H
