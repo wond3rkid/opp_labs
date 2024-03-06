@@ -2,7 +2,7 @@
 
 void p_fill_initial_approximation(double *approximation, size_t N) {
     int i;
-#pragma omp parallel for private(i)
+#pragma omp parallel for private(i) shared(approximation, N) default(none)
     for (i = 0; i < N; i++) {
         approximation[i] = 0;
     }
@@ -29,7 +29,7 @@ bool p_is_solved(const double **matrix, const double *vector, double *curr_appro
     return denominator_sqrt / numerator_sqrt < Epsilon;
 }
 
-double *p_multiplication_matrix_vector(const double **matrix, const double *vector, double *res, size_t N) {
+void p_multiplication_matrix_vector(const double **matrix, const double *vector, double *res, size_t N) {
     int i, j;
 #pragma omp parallel for shared(res, N) private(i) default (none)
     for (i = 0; i < N; i++) {
@@ -51,7 +51,7 @@ void p_subtracting_vectors(double *curr, const double *vector, size_t N) {
     }
 }
 
-double *p_multiplication_tau_vector(const double *vector, double *result, size_t N) {
+void p_multiplication_tau_vector(const double *vector, double *result, size_t N) {
     int i;
 #pragma omp parallel for shared(result, vector, N) private(i) default(none)
     for (i = 0; i < N; i++) {
@@ -62,14 +62,14 @@ double *p_multiplication_tau_vector(const double *vector, double *result, size_t
 double p_get_vector_sqrt(const double *vector, size_t N) {
     double ans = 0;
     int i;
-#pragma omp parallel for shared(vector, N) private(i)
+#pragma omp parallel for shared(vector, ans, N) private(i) default(none)
     for (i = 0; i < N; i++) {
         ans += vector[i] * vector[i];
     }
     return (double) pow(ans, 0.5);
 }
 
-double *p_get_next_x(const double **matrix, const double *vector, double *curr_approximation, size_t N) {
+void p_get_next_x(const double **matrix, const double *vector, double *curr_approximation, size_t N) {
     double *tmp_vect = malloc(sizeof(tmp_vect) * N);
     p_multiplication_matrix_vector(matrix, curr_approximation, tmp_vect, N);
     p_subtracting_vectors(tmp_vect, vector, N);
@@ -89,12 +89,11 @@ void p_preparation_perfomance_free(size_t N) {
     p_fill_matrix_vector(matrix, vector, N);
     double *initial_approximation = malloc(sizeof(vector) * N);
     p_fill_initial_approximation(initial_approximation, N);
-    printf("Start doing alg");
+
     p_solve_equations((const double **) matrix, vector, initial_approximation, N);
 
     p_print_result(initial_approximation, N);
     int i;
-#pragma omp parallel for shared(matrix, N) private(i) default(none)
     for (i = 0; i < N; i++) {
         free(matrix[i]);
     }
