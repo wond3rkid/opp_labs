@@ -16,14 +16,14 @@ void fill_matrix_vector(double **matrix, double *vector, size_t N) {
     }
 }
 
-double *multiplication_matrix_vector(const double **matrix, double *curr_approximation, size_t N) {
+double *multiplication_matrix_vector(const double **matrix, double *vector, size_t N) {
     double *res = malloc(sizeof(res) * N);
     for (int i = 0; i < N; i++) {
         res[i] = 0;
     }
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < N; j++) {
-            res[i] += matrix[i][j] * curr_approximation[j];
+            res[i] += matrix[i][j] * vector[j];
         }
     }
     return res;
@@ -60,12 +60,11 @@ bool is_solved(const double **matrix, const double *vector, double *curr_approxi
     return denominator_sqrt / numerator_sqrt < Epsilon;
 }
 
-double *get_next_x(const double **matrix, const double *vector, double *curr_approximation, size_t N) {
+void get_next_x(const double **matrix, const double *vector, double *curr_approximation, size_t N) {
     double *tmp_vect = multiplication_matrix_vector(matrix, curr_approximation, N);
     subtracting_vectors(tmp_vect, vector, N);
     double *tmp_curr = multiplication_tau_vector(tmp_vect, N);
     subtracting_vectors(curr_approximation, tmp_curr, N);
-    return curr_approximation;
 }
 
 void preparation_perfomance_free(size_t N) {
@@ -77,11 +76,15 @@ void preparation_perfomance_free(size_t N) {
     fill_matrix_vector(matrix, vector, N);
     double *initial_approximation = malloc(sizeof(vector) * N);
     fill_vector_initial_approximation(initial_approximation, N);
+
     solve_equations(matrix, vector, initial_approximation, N);
+
     print_result(initial_approximation, N);
+
     for (int i = 0; i < N; i++) {
         free(matrix[i]);
     }
+    free(initial_approximation);
     free(matrix);
     free(vector);
 }
