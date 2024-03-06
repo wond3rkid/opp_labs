@@ -1,7 +1,10 @@
-#include <stdio.h>
 #include "sequential_program.h"
+#include <time.h>
 
 int main(int argc, char **argv) {
-    preparation_perfomance_free(100000);
+    clock_t start = clock(), end;
+    preparation_perfomance_free(5000);
+    end = clock();
+    printf("Time taken: %f seconds", (double) (end - start) / CLOCKS_PER_SEC);
     return 0;
 }
