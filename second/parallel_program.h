@@ -15,7 +15,7 @@ void p_fill_matrix_vector(double **matrix, double *vector, size_t N);
 
 bool p_is_solved(const double **matrix, const double *vector, double *curr_approximation, size_t N);
 
-double *p_multiplication_matrix_vector(const double **matrix, double *curr_approximation, size_t N);
+double *p_multiplication_matrix_vector(const double **matrix, const double *vector, double *res, size_t N);
 
 void p_subtracting_vectors(double *curr, const double *vector, size_t N);
 

@@ -28,13 +28,26 @@ bool p_is_solved(const double **matrix, const double *vector, double *curr_appro
     return denominator_sqrt / numerator_sqrt < Epsilon;
 }
 
-double *p_multiplication_matrix_vector(const double **matrix, double *curr_approximation, size_t N) {
-
+double *p_multiplication_matrix_vector(const double **matrix, const double *vector, double *res, size_t N) {
+    for (int i = 0; i < N; i++) {
+        res[i] = 0;
+    }
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < N; j++) {
+            res[i] += matrix[i][j] * vector[j];
+        }
+    }
 }
 
-void p_subtracting_vectors(double *curr, const double *vector, size_t N);
+void p_subtracting_vectors(double *curr, const double *vector, size_t N) {
+    for (int i = 0; i < N; i++) {
+        curr[i] -= vector[i];
+    }
+}
 
-double *p_multiplication_tau_vector(const double *vector, size_t N);
+double *p_multiplication_tau_vector(const double *vector, size_t N) {
+
+}
 
 double p_get_vector_sqrt(const double *vector, size_t N);
 

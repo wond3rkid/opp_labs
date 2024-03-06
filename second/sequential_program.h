@@ -19,13 +19,13 @@ void fill_matrix_vector(double **matrix, double *vector, size_t N);
 bool is_solved(const double **matrix, const double *vector, double *curr_approximation, size_t N);
 
 // перемножение матрицы на вектор и возвращение нового вектора
-double *multiplication_matrix_vector(const double **matrix, double *vector, size_t N);
+void multiplication_matrix_vector(const double **matrix, const double *vector, double *res, size_t N);
 
 // вычитание из вектора с результатом перемножения матрицы и вектора вектора свободных значений b
 void subtracting_vectors(double *curr, const double *vector, size_t N);
 
 // умножение матрицы на число Тау. Возвращает новую матрицу
-double *multiplication_tau_vector(const double *vector, size_t N);
+void multiplication_tau_vector(const double *vector, double *result, size_t N);
 
 // считает норму вектора
 double get_vector_sqrt(const double *vector, size_t N);
