@@ -2,12 +2,17 @@ cmake_minimum_required(VERSION 3.27)
 project(second C)
 
 set(CMAKE_C_STANDARD 99)
+set(ENV{OMP_NUM_THREADS} "4")
+find_package(OpenMP REQUIRED)
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
 
 add_executable(second
         main.c
         sequential_program.h
         sequential_program.c
-        #parallel_program.h parallel_program.c
+        parallel_program.h
+        parallel_program.c
 )
-#m - math.h
-target_link_libraries(second m)
+
+target_link_libraries(second PRIVATE m)

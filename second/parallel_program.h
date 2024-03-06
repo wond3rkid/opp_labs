@@ -5,6 +5,7 @@
 #include <malloc.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <math.h>
 
 #define Epsilon 0.00001
 #define Tau 0.00001
@@ -19,7 +20,7 @@ double *p_multiplication_matrix_vector(const double **matrix, const double *vect
 
 void p_subtracting_vectors(double *curr, const double *vector, size_t N);
 
-double *p_multiplication_tau_vector(const double *vector, size_t N);
+double *p_multiplication_tau_vector(const double *vector, double *result, size_t N);
 
 double p_get_vector_sqrt(const double *vector, size_t N);
 
