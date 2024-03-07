@@ -80,7 +80,7 @@ void preparation_perfomance_free(size_t N) {
 
     solve_equations((const double **) matrix, vector, initial_approximation, N);
 
-    print_result(initial_approximation, N);
+    //print_result(initial_approximation, N);
 
     for (int i = 0; i < N; i++) {
         free(matrix[i]);

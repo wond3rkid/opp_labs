@@ -2,7 +2,7 @@
 
 void p_fill_initial_approximation(double *approximation, size_t N) {
     int i;
-#pragma omp parallel for private(i) shared(approximation, N) default(none)
+#pragma omp parallel for
     for (i = 0; i < N; i++) {
         approximation[i] = 0;
     }
@@ -10,7 +10,7 @@ void p_fill_initial_approximation(double *approximation, size_t N) {
 
 void p_fill_matrix_vector(double **matrix, double *vector, size_t N) {
     int i, j;
-#pragma omp parallel for shared(matrix, vector, N) private(i, j) default (none)
+#pragma omp parallel for
     for (i = 0; i < N; i++) {
         for (j = 0; j < N; j++) {
             matrix[i][j] = (i == j) ? 2 : 1;
@@ -31,11 +31,11 @@ bool p_is_solved(const double **matrix, const double *vector, double *curr_appro
 
 void p_multiplication_matrix_vector(const double **matrix, const double *vector, double *res, size_t N) {
     int i, j;
-#pragma omp parallel for shared(res, N) private(i) default (none)
+#pragma omp parallel for
     for (i = 0; i < N; i++) {
         res[i] = 0;
     }
-#pragma omp parallel for shared(res, matrix, vector, N) private(i, j) default (none)
+#pragma omp parallel for
     for (i = 0; i < N; i++) {
         for (j = 0; j < N; j++) {
             res[i] += matrix[i][j] * vector[j];
@@ -45,7 +45,7 @@ void p_multiplication_matrix_vector(const double **matrix, const double *vector,
 
 void p_subtracting_vectors(double *curr, const double *vector, size_t N) {
     int i;
-#pragma omp parallel shared(curr, vector, N) private(i) default(none)
+#pragma omp parallel for
     for (i = 0; i < N; i++) {
         curr[i] -= vector[i];
     }
@@ -53,7 +53,7 @@ void p_subtracting_vectors(double *curr, const double *vector, size_t N) {
 
 void p_multiplication_tau_vector(const double *vector, double *result, size_t N) {
     int i;
-#pragma omp parallel for shared(result, vector, N) private(i) default(none)
+#pragma omp parallel for
     for (i = 0; i < N; i++) {
         result[i] = vector[i] * Tau;
     }
@@ -62,7 +62,7 @@ void p_multiplication_tau_vector(const double *vector, double *result, size_t N)
 double p_get_vector_sqrt(const double *vector, size_t N) {
     double ans = 0;
     int i;
-#pragma omp parallel for shared(vector, ans, N) private(i) default(none)
+#pragma omp parallel for
     for (i = 0; i < N; i++) {
         ans += vector[i] * vector[i];
     }
@@ -89,10 +89,10 @@ void p_preparation_perfomance_free(size_t N) {
     p_fill_matrix_vector(matrix, vector, N);
     double *initial_approximation = malloc(sizeof(vector) * N);
     p_fill_initial_approximation(initial_approximation, N);
-
+    //printf("here");
     p_solve_equations((const double **) matrix, vector, initial_approximation, N);
-
-    p_print_result(initial_approximation, N);
+    //printf("after here");
+    //p_print_result(initial_approximation, N);
     int i;
     for (i = 0; i < N; i++) {
         free(matrix[i]);
