@@ -13,3 +13,7 @@ Time taken: 35.474434 seconds
 ```c
 Time taken: 68.964354 seconds
 ```
+
+Команда для компиляции
+```bash
+gcc -fopenmp main.c sequential_program.c parallel_program.c -o main.out -lm```
