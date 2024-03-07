@@ -75,7 +75,6 @@ void p_get_next_x(const double **matrix, const double *vector, double *curr_appr
 }
 
 void p_preparation_perfomance_free(size_t N) {
-    fprintf(stderr, "here 1");
     double **matrix = malloc(sizeof(*matrix) * N);
     for (int i = 0; i < N; i++) {
         matrix[i] = malloc(sizeof(matrix[i]) * N);
@@ -84,12 +83,9 @@ void p_preparation_perfomance_free(size_t N) {
     p_fill_matrix_vector(matrix, vector, N);
     double *initial_approximation = malloc(sizeof(vector) * N);
     p_fill_initial_approximation(initial_approximation, N);
-    fprintf(stderr, "here 2");
     p_solve_equations(matrix, vector, initial_approximation, N);
-    fprintf(stderr, "here 3");
-    p_print_result(initial_approximation, N);
-    int i;
-    for (i = 0; i < N; i++) {
+    //p_print_result(initial_approximation, N);
+    for (int i = 0; i < N; i++) {
         free(matrix[i]);
     }
     free(initial_approximation);
