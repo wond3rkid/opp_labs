@@ -79,9 +79,7 @@ void preparation_perfomance_free(size_t N) {
     fill_vector_initial_approximation(initial_approximation, N);
 
     solve_equations((const double **) matrix, vector, initial_approximation, N);
-
     //print_result(initial_approximation, N);
-
     for (int i = 0; i < N; i++) {
         free(matrix[i]);
     }
@@ -92,8 +90,6 @@ void preparation_perfomance_free(size_t N) {
 
 void solve_equations(const double **matrix, const double *vector, double *initial_approximation, size_t N) {
     do {
-        //fprintf(stderr, "here hehehehe while ");
-        //fprintf(stderr, "is solved: %d \n", is_solved(matrix, vector, initial_approximation, N));
         get_next_x(matrix, vector, initial_approximation, N);
     } while (!is_solved(matrix, vector, initial_approximation, N));
 }

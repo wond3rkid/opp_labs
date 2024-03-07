@@ -6,14 +6,19 @@
 ```c
 Time taken: 35.474434 seconds
 ```
+При N = 10000
+```c
+Time taken for non-parallel: 68.953098 seconds
+```
 
 
 ###### Parallel program
 При N = 10000
 ```c
-Time taken: 68.964354 seconds
+Time taken for parallel: 16.087088 seconds
 ```
 
 Команда для компиляции
 ```bash
-gcc -fopenmp main.c sequential_program.c parallel_program.c -o main.out -lm```
+gcc -fopenmp main.c sequential_program.c parallel_for_program.c -o main.out -lm
+```

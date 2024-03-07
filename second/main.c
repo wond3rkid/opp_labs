@@ -1,10 +1,16 @@
 #include "sequential_program.h"
-#include "parallel_program.h"
+#include "parallel_for_program.h"
 #include <time.h>
+#define EXIT_ERROR 1
+#define EXIT_SUCCESS 0
 
 int main(int argc, char **argv) {
-    int N = 10000;
-
+    if (argc < 2) {
+        fprintf(stderr, "Where is N? Mhhhm?\n");
+        return EXIT_ERROR;
+    }
+    int N = atoi(argv[1]);
+    fprintf(stdout, "Your N: %d \n", N);
     clock_t start = clock(), end;
     preparation_perfomance_free(N);
     end = clock();
@@ -14,5 +20,5 @@ int main(int argc, char **argv) {
     p_preparation_perfomance_free(N);
     double end1 = omp_get_wtime();
     printf("Time taken for parallel: %f seconds\n", end1 - start1);
-    return 0;
+    return EXIT_SUCCESS;
 }

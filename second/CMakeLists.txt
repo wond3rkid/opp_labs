@@ -7,8 +7,8 @@ add_executable(second
         main.c
         sequential_program.h
         sequential_program.c
-        parallel_program.h
-        parallel_program.c
+        parallel_for_program.h
+        parallel_for_program.c
 )
 
 target_link_libraries(second PRIVATE m)

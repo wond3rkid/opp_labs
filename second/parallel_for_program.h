@@ -1,5 +1,5 @@
-#ifndef SECOND_PARALLEL_PROGRAM_H
-#define SECOND_PARALLEL_PROGRAM_H
+#ifndef SECOND_PARALLEL_FOR_PROGRAM_H
+#define SECOND_PARALLEL_FOR_PROGRAM_H
 #include <omp.h>
 #include <stdio.h>
 #include <malloc.h>
@@ -32,4 +32,4 @@ void p_solve_equations(const double **matrix, const double *vector, double *init
 
 void p_print_result(double *res, size_t N);
 
-#endif //SECOND_PARALLEL_PROGRAM_H
+#endif //SECOND_PARALLEL_FOR_PROGRAM_H

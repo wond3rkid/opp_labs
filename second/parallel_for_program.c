@@ -1,4 +1,4 @@
-#include "parallel_program.h"
+#include "parallel_for_program.h"
 
 void p_fill_initial_approximation(double *approximation, size_t N) {
 #pragma omp parallel for
@@ -83,7 +83,7 @@ void p_preparation_perfomance_free(size_t N) {
     p_fill_matrix_vector(matrix, vector, N);
     double *initial_approximation = malloc(sizeof(vector) * N);
     p_fill_initial_approximation(initial_approximation, N);
-    p_solve_equations(matrix, vector, initial_approximation, N);
+    p_solve_equations((const double **) matrix, vector, initial_approximation, N);
     //p_print_result(initial_approximation, N);
     for (int i = 0; i < N; i++) {
         free(matrix[i]);
@@ -95,8 +95,6 @@ void p_preparation_perfomance_free(size_t N) {
 
 void p_solve_equations(const double **matrix, const double *vector, double *initial_approximation, size_t N) {
     do {
-        //fprintf(stderr, "here hehehehe while");
-        //fprintf(stderr, "is solved: %d \n", p_is_solved(matrix, vector, initial_approximation, N));
         p_get_next_x(matrix, vector, initial_approximation, N);
     } while (!p_is_solved(matrix, vector, initial_approximation, N));
 
