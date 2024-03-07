@@ -16,6 +16,7 @@ void p_fill_matrix_vector(double **matrix, double *vector, size_t N) {
             matrix[i][j] = (i == j) ? 2 : 1;
         }
         vector[i] = (double) N + 1;
+        printf("Threads %d", omp_get_num_threads());
     }
 }
 
@@ -89,10 +90,10 @@ void p_preparation_perfomance_free(size_t N) {
     p_fill_matrix_vector(matrix, vector, N);
     double *initial_approximation = malloc(sizeof(vector) * N);
     p_fill_initial_approximation(initial_approximation, N);
-    //printf("here");
+    printf("here");
     p_solve_equations((const double **) matrix, vector, initial_approximation, N);
-    //printf("after here");
-    //p_print_result(initial_approximation, N);
+    printf("after here");
+    p_print_result(initial_approximation, N);
     int i;
     for (i = 0; i < N; i++) {
         free(matrix[i]);
