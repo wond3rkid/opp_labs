@@ -56,7 +56,7 @@ void p_multiplication_tau_vector(const double *vector, double *result, size_t N)
 
 double p_get_vector_sqrt(const double *vector, size_t N) {
     double ans = 0;
-#pragma omp parallel for
+#pragma omp parallel for reduction(+: ans)
     for (int i = 0; i < N; i++) {
         ans += vector[i] * vector[i];
     }

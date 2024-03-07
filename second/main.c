@@ -10,10 +10,10 @@ int main(int argc, char **argv) {
     end = clock();
     printf("Time taken for non-parallel: %f seconds\n", (double) (end - start) / CLOCKS_PER_SEC);
 
-    start = clock();
+    int start1 = clock();
     p_preparation_perfomance_free(N);
-    end = clock();
-    printf("Time taken for parallel: %f seconds\n", (double) (end - start) / CLOCKS_PER_SEC);
+    int end1 = clock();
+    printf("Time taken for parallel: %f seconds\n", (double) (end1 - start1) / CLOCKS_PER_SEC);
 
     return 0;
 }
