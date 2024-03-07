@@ -92,6 +92,8 @@ void preparation_perfomance_free(size_t N) {
 
 void solve_equations(const double **matrix, const double *vector, double *initial_approximation, size_t N) {
     do {
+        //fprintf(stderr, "here hehehehe while ");
+        //fprintf(stderr, "is solved: %d \n", is_solved(matrix, vector, initial_approximation, N));
         get_next_x(matrix, vector, initial_approximation, N);
     } while (!is_solved(matrix, vector, initial_approximation, N));
 }
