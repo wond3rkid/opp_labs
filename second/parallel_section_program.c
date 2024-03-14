@@ -22,6 +22,7 @@ bool s_is_solved(const double **matrix, const double *vector, double *curr_appro
     s_subtracting_vectors(denominator, vector, N);
     double denominator_sqrt = s_get_vector_sqrt(denominator, N);
     free(denominator);
+    fprintf(stderr, "%f\n", denominator_sqrt / numerator_sqrt);
     return denominator_sqrt / numerator_sqrt < Epsilon;
 }
 
@@ -84,18 +85,23 @@ void s_preparation_perfomance_free(size_t N) {
 void s_solve_equations(const double **matrix, const double *vector, double *initial_approximation, size_t N) {
     do {
         double *tmp_vect = malloc(sizeof(tmp_vect) * N);
-
-        // pragma omp parallel section
-        s_multiplication_matrix_vector(matrix, initial_approximation, tmp_vect, N);
-
-        s_subtracting_vectors(tmp_vect, vector, N);
-
         double *tmp_curr = malloc(sizeof(tmp_curr) * N);
 
+        // pragma omp parallel section
+#pragma omp parallel
+{
+        s_multiplication_matrix_vector(matrix, initial_approximation, tmp_vect, N);
+
+#pragma omp barrier
+//        printf("get after barrier \n");
+        s_subtracting_vectors(tmp_vect, vector, N);
+
+#pragma omp barrier
         s_multiplication_tau_vector(tmp_vect, tmp_curr, N);
 
+#pragma omp barrier
         s_subtracting_vectors(initial_approximation, tmp_curr, N);
-
+}
         free(tmp_curr);
         free(tmp_vect);
     } while (!s_is_solved(matrix, vector, initial_approximation, N));
