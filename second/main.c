@@ -1,5 +1,6 @@
 #include "sequential_program.h"
 #include "parallel_for_program.h"
+#include "parallel_section_program.h"
 #include <time.h>
 
 #define EXIT_ERROR 1
@@ -20,6 +21,11 @@ int main(int argc, char **argv) {
     double start1 = omp_get_wtime();
     p_preparation_perfomance_free(N);
     double end1 = omp_get_wtime();
-    printf("Time taken for parallel: %f seconds\n", end1 - start1);
+    printf("Time taken for 'for' parallel: %f seconds\n", end1 - start1);
+
+    double start2 = omp_get_wtime();
+    s_preparation_perfomance_free(N);
+    double end2 = omp_get_wtime();
+    printf("Time taken for 'section' parallel: %f seconds\n", end2 - start2);
     return EXIT_SUCCESS;
 }

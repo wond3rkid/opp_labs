@@ -63,16 +63,6 @@ double p_get_vector_sqrt(const double *vector, size_t N) {
     return (double) pow(ans, 0.5);
 }
 
-void p_get_next_x(const double **matrix, const double *vector, double *curr_approximation, size_t N) {
-    double *tmp_vect = malloc(sizeof(tmp_vect) * N);
-    p_multiplication_matrix_vector(matrix, curr_approximation, tmp_vect, N);
-    p_subtracting_vectors(tmp_vect, vector, N);
-    double *tmp_curr = malloc(sizeof(tmp_curr) * N);
-    p_multiplication_tau_vector(tmp_vect, tmp_curr, N);
-    p_subtracting_vectors(curr_approximation, tmp_curr, N);
-    free(tmp_curr);
-    free(tmp_vect);
-}
 
 void p_preparation_perfomance_free(size_t N) {
     double **matrix = malloc(sizeof(*matrix) * N);
@@ -95,7 +85,14 @@ void p_preparation_perfomance_free(size_t N) {
 
 void p_solve_equations(const double **matrix, const double *vector, double *initial_approximation, size_t N) {
     do {
-        p_get_next_x(matrix, vector, initial_approximation, N);
+        double *tmp_vect = malloc(sizeof(tmp_vect) * N);
+        p_multiplication_matrix_vector(matrix, initial_approximation, tmp_vect, N);
+        p_subtracting_vectors(tmp_vect, vector, N);
+        double *tmp_curr = malloc(sizeof(tmp_curr) * N);
+        p_multiplication_tau_vector(tmp_vect, tmp_curr, N);
+        p_subtracting_vectors(initial_approximation, tmp_curr, N);
+        free(tmp_curr);
+        free(tmp_vect);
     } while (!p_is_solved(matrix, vector, initial_approximation, N));
 
 }
