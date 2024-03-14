@@ -23,5 +23,5 @@ Time taken for parallel: 16.087088 seconds
 ## 
 #### Команда для компиляции. CMakeLists.txt - не рабочий вариант
 ```bash
-gcc -fopenmp main.c sequential_program.c parallel_for_program.c -o main.out -lm
+ gcc -fopenmp main.c sequential_program.c parallel_for_program.c parallel_section_program.c -o main.out -lm
 ```
