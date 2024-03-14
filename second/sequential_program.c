@@ -57,17 +57,6 @@ bool is_solved(const double **matrix, const double *vector, double *curr_approxi
     return denominator_sqrt / numerator_sqrt < Epsilon;
 }
 
-void get_next_x(const double **matrix, const double *vector, double *curr_approximation, size_t N) {
-    double *tmp_vect = malloc(sizeof(tmp_vect) * N);
-    multiplication_matrix_vector(matrix, curr_approximation, tmp_vect, N);
-    subtracting_vectors(tmp_vect, vector, N);
-    double *tmp_curr = malloc(sizeof(tmp_curr) * N);
-    multiplication_tau_vector(tmp_vect, tmp_curr, N);
-    subtracting_vectors(curr_approximation, tmp_curr, N);
-    free(tmp_curr);
-    free(tmp_vect);
-}
-
 void preparation_perfomance_free(size_t N) {
     double **matrix = malloc(sizeof(*matrix) * N);
     for (int i = 0; i < N; i++) {
@@ -79,7 +68,7 @@ void preparation_perfomance_free(size_t N) {
     fill_vector_initial_approximation(initial_approximation, N);
 
     solve_equations((const double **) matrix, vector, initial_approximation, N);
-    //print_result(initial_approximation, N);
+    print_result(initial_approximation, N);
     for (int i = 0; i < N; i++) {
         free(matrix[i]);
     }
@@ -90,12 +79,19 @@ void preparation_perfomance_free(size_t N) {
 
 void solve_equations(const double **matrix, const double *vector, double *initial_approximation, size_t N) {
     do {
-        get_next_x(matrix, vector, initial_approximation, N);
+        double *tmp_vect = malloc(sizeof(tmp_vect) * N);
+        multiplication_matrix_vector(matrix, initial_approximation, tmp_vect, N);
+        subtracting_vectors(tmp_vect, vector, N);
+        double *tmp_curr = malloc(sizeof(tmp_curr) * N);
+        multiplication_tau_vector(tmp_vect, tmp_curr, N);
+        subtracting_vectors(initial_approximation, tmp_curr, N);
+        free(tmp_curr);
+        free(tmp_vect);
     } while (!is_solved(matrix, vector, initial_approximation, N));
 }
 
 void print_result(double *result, size_t N) {
     for (int i = 0; i < N; i++) {
-        printf("res[%d] = %f\n", i, result[i]);
+        printf("res[%d] = %f\n", i + 1, result[i]);
     }
 }

@@ -1,6 +1,7 @@
 #include "sequential_program.h"
 #include "parallel_for_program.h"
 #include <time.h>
+
 #define EXIT_ERROR 1
 #define EXIT_SUCCESS 0
 

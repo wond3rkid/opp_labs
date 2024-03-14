@@ -56,25 +56,6 @@ double s_get_vector_sqrt(const double *vector, size_t N) {
     return (double) pow(ans, 0.5);
 }
 
-void s_get_next_x(const double **matrix, const double *vector, double *curr_approximation, size_t N) {
-    double *tmp_vect = malloc(sizeof(tmp_vect) * N);
-
-    // pragma omp parallel section
-    s_multiplication_matrix_vector(matrix, curr_approximation, tmp_vect, N);
-
-    s_subtracting_vectors(tmp_vect, vector, N);
-
-    double *tmp_curr = malloc(sizeof(tmp_curr) * N);
-
-    s_multiplication_tau_vector(tmp_vect, tmp_curr, N);
-
-    s_subtracting_vectors(curr_approximation, tmp_curr, N);
-
-
-    free(tmp_curr);
-    free(tmp_vect);
-}
-
 void s_preparation_perfomance_free(size_t N) {
     double **matrix = malloc(sizeof(*matrix) * N);
     for (int i = 0; i < N; i++) {
@@ -102,13 +83,26 @@ void s_preparation_perfomance_free(size_t N) {
 
 void s_solve_equations(const double **matrix, const double *vector, double *initial_approximation, size_t N) {
     do {
-        s_get_next_x(matrix, vector, initial_approximation, N);
-    } while (!s_is_solved(matrix, vector, initial_approximation, N));
+        double *tmp_vect = malloc(sizeof(tmp_vect) * N);
 
+        // pragma omp parallel section
+        s_multiplication_matrix_vector(matrix, initial_approximation, tmp_vect, N);
+
+        s_subtracting_vectors(tmp_vect, vector, N);
+
+        double *tmp_curr = malloc(sizeof(tmp_curr) * N);
+
+        s_multiplication_tau_vector(tmp_vect, tmp_curr, N);
+
+        s_subtracting_vectors(initial_approximation, tmp_curr, N);
+
+        free(tmp_curr);
+        free(tmp_vect);
+    } while (!s_is_solved(matrix, vector, initial_approximation, N));
 }
 
-void p_print_result(double *res, size_t N) {
+void s_print_result(double *res, size_t N) {
     for (int i = 0; i < N; i++) {
-        printf("res[%d] = %f\n", i, res[i]);
+        printf("res[%d] = %f\n", i + 1, res[i]);
     }
 }

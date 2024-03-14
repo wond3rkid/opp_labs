@@ -30,8 +30,6 @@ void multiplication_tau_vector(const double *vector, double *result, size_t N);
 // считает норму вектора
 double get_vector_sqrt(const double *vector, size_t N);
 
-void get_next_x(const double **matrix, const double *vector, double *curr_approximation, size_t N);
-
 void preparation_perfomance_free(size_t N);
 
 void solve_equations(const double **matrix, const double *vector, double *initial_approximation, size_t N);

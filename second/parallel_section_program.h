@@ -25,8 +25,6 @@ void s_multiplication_tau_vector(const double *vector, double *result, size_t N)
 
 double s_get_vector_sqrt(const double *vector, size_t N);
 
-void s_get_next_x(const double **matrix, const double *vector, double *curr_approximation, size_t N);
-
 void s_preparation_perfomance_free(size_t N);
 
 void s_solve_equations(const double **matrix, const double *vector, double *initial_approximation, size_t N);
