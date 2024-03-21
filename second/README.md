@@ -19,6 +19,11 @@ Time taken for non-parallel: 68.953098 seconds
 Time taken for parallel: 16.087088 seconds
 ```
 
+###### Parallel section
+При N = 10000
+```c
+Time taken for 'section' parallel: 52.526029 seconds
+```
 ## 
 ## 
 #### Команда для компиляции. CMakeLists.txt - не рабочий вариант
