@@ -34,6 +34,9 @@ void p_multiplication_matrix_vector(const double **matrix, const double *vector,
     }
 #pragma omp parallel for
     for (int i = 0; i < N; i++) {
+        if (i < 15) {
+//            fprintf(stderr, "p %d - %d thread\n", i, omp_get_thread_num());
+        }
         for (int j = 0; j < N; j++) {
             res[i] += matrix[i][j] * vector[j];
         }
