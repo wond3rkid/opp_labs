@@ -1,31 +1,26 @@
-## Лабораторная работа №2
+### Лабораторная работа №2
 ### «Параллельная реализация решения системы линейных алгебраических уравнений с помощью OpenMP»
 
-### some examples
-###### Sequential Program
-При N = 5000
-```c
-Time taken: 35.474434 seconds
-```
-При N = 10000
-```c
-Time taken for non-parallel: 68.953098 seconds
-```
+#### Замеры времени работы программы при разном количество потоков
+_**N = 10 000**_
 
+1 Вариант:
 
-###### Parallel program
-При N = 10000
-```c
-Time taken for parallel: 16.087088 seconds
-```
+| threads | time taken, seconds |
+| ------- |---------------------|
+| 1       | 68.715656           |
+| 2       | 34.928088           |
+| 3       | 24.723057           |
+| 4       | 19.951360           |
+| 5       | 17.093051           |
+| 6       | 15.586623           |
+| 7       | 19.816114           |
+| 8       | 18.459846           |
+| 9       | 16.841057           |
+| 10      | 16.107252           |
+| 11      | 15.626192           |
+| 12      | 15.003557           |
 
-###### Parallel section
-При N = 10000
-```c
-Time taken for 'section' parallel: 52.526029 seconds
-```
-## 
-## 
 #### Команда для компиляции. CMakeLists.txt - не рабочий вариант
 ```bash
  gcc -fopenmp main.c sequential_program.c parallel_for_program.c parallel_section_program.c -o main.out -lm
