@@ -11,6 +11,8 @@ add_executable(second
         parallel_for_program.c
         parallel_section_program.h
         parallel_section_program.c
+        schedule_program.h
+        schedule_program.c
 )
 
 target_link_libraries(second PRIVATE m)

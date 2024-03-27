@@ -94,7 +94,6 @@ void p_solve_equations(const double **matrix, const double *vector, double *init
         free(tmp_curr);
         free(tmp_vect);
     } while (!p_is_solved(matrix, vector, initial_approximation, N));
-
 }
 
 

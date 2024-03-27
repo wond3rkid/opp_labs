@@ -1,6 +1,7 @@
-//#include "sequential_program.h"
+#include "sequential_program.h"
 #include "parallel_for_program.h"
 #include "parallel_section_program.h"
+#include "schedule_program.h"
 #include <time.h>
 
 #define EXIT_ERROR 1
@@ -14,11 +15,10 @@ int main(int argc, char **argv) {
     int N = atoi(argv[1]);
     fprintf(stdout, "Your N: %d \n", N);
 
-    /*clock_t start = clock(), end;
+    clock_t start = clock(), end;
     preparation_perfomance_free(N);
     end = clock();
     printf("Time taken for non-parallel: %f seconds\n", (double) (end - start) / CLOCKS_PER_SEC);
-    */
 
     double start1 = omp_get_wtime();
     p_preparation_perfomance_free(N);
@@ -29,5 +29,10 @@ int main(int argc, char **argv) {
     s_preparation_perfomance_free(N);
     double end2 = omp_get_wtime();
     printf("Time taken for 'section' parallel: %f seconds\n", end2 - start2);
+
+    double start3 = omp_get_wtime();
+    sc_preparation_perfomance_free(N);
+    double end3 = omp_get_wtime();
+    printf("Time taken for 'schedule' parallel: %f seconds\n", end3 - start3);
     return EXIT_SUCCESS;
 }
