@@ -3,7 +3,7 @@ project(second C)
 
 set(CMAKE_C_STANDARD 99)
 
-add_executable(second
+set(SOURCES
         main.c
         sequential_program.h
         sequential_program.c
@@ -15,4 +15,13 @@ add_executable(second
         schedule_program.c
 )
 
-target_link_libraries(second PRIVATE m)
+add_executable(main.out ${SOURCES})
+
+set(CMAKE_C_COMPILER gcc)
+
+find_package(OpenMP REQUIRED)
+if(OpenMP_C_FOUND)
+    target_link_libraries(main.out PUBLIC OpenMP::OpenMP_C)
+endif()
+
+target_link_libraries(main.out PRIVATE m)
