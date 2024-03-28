@@ -15,4 +15,4 @@ add_executable(first main.c
         parallel_program.c)
 
 target_include_directories(first PRIVATE ${MPI_INCLUDE_PATH})
-target_link_libraries(first ${MPI_LIBRARIES})
+target_link_libraries(first PRIVATE ${MPI_LIBRARIES} m)

@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include <mpi/mpi.h>
+#include "parallel_program.h"
 
-
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
+    do_algorithm(100);
     // Initialize the MPI environment
     MPI_Init(NULL, NULL);
 
