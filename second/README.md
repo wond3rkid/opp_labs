@@ -44,7 +44,7 @@ gcc -fopenmp main.c schedule_program.c -o main.out -lm
 | static  | 200  | 9.186259  |
 | static  | 100  | 8.676748  |
 
-##### Команда для компиляции. CMakeLists.txt - не рабочий вариант
+##### Команда для компиляции:
 ```bash
 gcc -fopenmp main.c sequential_program.c parallel_for_program.c parallel_section_program.c -o main.out -lm`
 ```
