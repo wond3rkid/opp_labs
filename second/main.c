@@ -18,7 +18,7 @@ int main(int argc, char **argv) {
     clock_t start = clock(), end;
     preparation_perfomance_free(N);
     end = clock();
-    printf("Time taken for non-parallel: %f seconds\n", (double) (end - start) / CLOCKS_PER_SEC);
+    printf("Time taken for non-parallel: %.2f seconds\n", (double) (end - start) / CLOCKS_PER_SEC);
 
     double start1 = omp_get_wtime();
     p_preparation_perfomance_free(N);
