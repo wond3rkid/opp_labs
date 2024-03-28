@@ -3,7 +3,8 @@
 #include "parallel_program.h"
 
 int main(int argc, char **argv) {
-    do_algorithm(100);
+    int size = 10000;
+    do_algorithm(size);
     // Initialize the MPI environment
     MPI_Init(NULL, NULL);
 
