@@ -84,6 +84,7 @@ void solve_equations(const double **matrix, const double *vector, double *initia
         subtracting_vectors(tmp_vect, vector, N);
         double *tmp_curr = malloc(sizeof(tmp_curr) * N);
         multiplication_tau_vector(tmp_vect, tmp_curr, N);
+        // get next x - here ->
         subtracting_vectors(initial_approximation, tmp_curr, N);
         free(tmp_curr);
         free(tmp_vect);

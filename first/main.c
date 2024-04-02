@@ -1,30 +1,26 @@
 #include <stdio.h>
 #include <mpi/mpi.h>
-#include "parallel_program.h"
+#include <malloc.h>
+#include "program.h"
 
 int main(int argc, char **argv) {
-    int size = 10000;
-    do_algorithm(size);
-    // Initialize the MPI environment
-    MPI_Init(NULL, NULL);
+    int
+            N_ = 1000;
+    double *matrix = malloc(sizeof(*matrix) * N_ * N_);
+    double *vector = malloc(sizeof(vector) * N_);
+    double *initial_approximation = malloc(sizeof(initial_approximation) * N_);
+    MPI_Init(&argc, &argv);
+    int size, rank;
+    double start = 0, end;
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    if (rank == 0) {
+        fill_all_data(matrix, vector, initial_approximation);
+        start = MPI_Wtime();
+    }
 
-    // Get the number of processes
-    int world_size;
-    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
-    // Get the rank of the process
-    int world_rank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
-
-    // Get the name of the processor
-    char processor_name[MPI_MAX_PROCESSOR_NAME];
-    int name_len;
-    MPI_Get_processor_name(processor_name, &name_len);
-
-    // Print off a hello world message
-    printf("Hello world from processor %s, rank %d out of %d processors\n",
-           processor_name, world_rank, world_size);
-
-    // Finalize the MPI environment.
+    end = MPI_Wtime();
+    printf("Time taken for program: %f \n", end - start);
     MPI_Finalize();
 }
