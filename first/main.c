@@ -16,18 +16,6 @@ int calculate_chunk_size(int curr_rank) {
     return (int) (N / size) + add;
 }
 
-void fill_all_data(double *matrix, double *vector, double *approximation) {
-    for (int i = 0; i < N; i++) {
-        for (int j = 0; j < N; j++) {
-            matrix[i * N + j] = (i == j) ? 2 : 1;
-        }
-    }
-    for (int i = 0; i < N; i++) {
-        approximation[i] = 0;
-        vector[i] = N + 1;
-    }
-}
-
 int calculate_shift(int curr_rank) {
     int shift = 0;
     for (int i = 0; i < curr_rank; i++) {
@@ -48,11 +36,27 @@ void calculate_chunk_array() {
     }
 }
 
+void fill_all_data(double *matrix, double *vector, double *approximation) {
+    int curr_chunk = chunk_array[rank];
+    int curr_shift = shift_array[rank];
+    for (int i = 0; i < curr_chunk; i++) {
+        for (int j = 0; j < N; j++) {
+            matrix[i * N + j] = (i == (j - curr_shift)) ? 2 : 1;
+        }
+    }
+    MPI_Barrier(MPI_COMM_WORLD);
+    for (int i = 0; i < N; i++) {
+        approximation[i] = 0;
+        vector[i] = N + 1;
+    }
+}
+
+
 void parallel_print_result(double *vector) {
     MPI_Barrier(MPI_COMM_WORLD);
     if (0 == rank) {
         for (int i = 0; i < N; i++) {
-            printf("%1.1f", vector[i]);
+            printf("%1.1f ", vector[i]);
         }
     }
 }
@@ -66,6 +70,7 @@ double get_vector_sqrt(const double *vector) {
         chunk_res += vector[i] * vector[i];
     }
     MPI_Allreduce(&chunk_res, &res, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    return res;
 }
 
 void mult_tau_vector(const double *vector, double *result) {
@@ -85,10 +90,12 @@ double *mult_matrix_vector(const double *matrix, const double *vector) {
     return result;
 }
 
-void subt_vectors(double *curr, const double *vector) {
+double *subt_vectors(double *curr, const double *vector) {
+    double *res = calloc(N, sizeof(double));
     for (int i = 0; i < N; i++) {
-        curr[i] -= vector[i];
+        res[i] = curr[i] - vector[i];
     }
+    return res;
 }
 
 
@@ -97,18 +104,29 @@ bool is_solved(double *den_vec, double *num_vec) {
 }
 
 double *solve_equations(double *matrix, double *vector, double *approximation) {
+
     double *result = calloc(N, sizeof(double));
     bool is_done = is_solved(approximation, vector);
+    fprintf(stderr, "1 IS SOLVED: %f \n", get_vector_sqrt(approximation) / get_vector_sqrt(vector));
     while (!is_done) {
+        fprintf(stderr, " now is %d rank: %d \n", is_done, rank);
         // Ax Ax-b *tau x-tau(Ax-b)
-        double *Ax = mult_matrix_vector(matrix, approximation);
-        subt_vectors(Ax, vector); //Ax - Ax - b
+        double *tmp_Ax = mult_matrix_vector(matrix, approximation);
+        double *Ax = calloc(N, sizeof(double));
+        MPI_Allgatherv(tmp_Ax, chunk_array[rank], MPI_DOUBLE, Ax, chunk_array, shift_array, MPI_DOUBLE, MPI_COMM_WORLD);
+
+        double *Ax_b = subt_vectors(Ax, vector);
+        fprintf(stderr, "IS SOLVED: %f \n", get_vector_sqrt(Ax_b) / get_vector_sqrt(vector));
+        is_done = is_solved(Ax_b, vector);
+
         double *tAxminB = calloc(N, sizeof(double));
-        mult_tau_vector(Ax, tAxminB);
-        subt_vectors(approximation, tAxminB);
-        is_done = is_solved(approximation, vector);
+        mult_tau_vector(Ax_b, tAxminB);
+
+        result = subt_vectors(result, tAxminB);
+        printf("\n");
     }
-    parallel_print_result(approximation);
+    parallel_print_result(result);
+    return result;
 }
 
 
@@ -118,30 +136,22 @@ int main(int argc, char **argv) {
     double *initial_approximation = malloc(sizeof(initial_approximation) * N);
     chunk_array = calloc(size, sizeof(int));
     shift_array = calloc(size, sizeof(int));
-    double start = 0, end;
+    double start, end;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    fill_all_data(matrix, vector, initial_approximation);
+    calculate_chunk_array();
+    calculate_shift_array();
 
-    if (rank == 0) {
-        fill_all_data(matrix, vector, initial_approximation);
-        calculate_chunk_array();
-        calculate_shift_array();
-        for (int i = 0; i < size; i++) {
-            printf("shift chunk %d %d\n", shift_array[i], chunk_array[i]);
-        }
-        start = MPI_Wtime();
-    }
-
-    MPI_Barrier(MPI_COMM_WORLD);
+    start = MPI_Wtime();
     solve_equations(matrix, vector, initial_approximation);
-    if (rank == 0) {
-        end = MPI_Wtime();
-        printf("Time taken for program: %f \n", end - start);
-    }
+    end = MPI_Wtime();
+    printf("Time taken for program: %f curr process: %d \n", end - start, rank);
 
     MPI_Finalize();
+
     free(matrix);
     free(vector);
     free(initial_approximation);
