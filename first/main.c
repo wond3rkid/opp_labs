@@ -4,10 +4,9 @@
 
 #define Epsilon 0.00001
 #define Tau 0.00001
-
+#define N 10
 int rank, size;
 int *chunk_array, *shift_array;
-int N = 10;
 
 int calculate_chunk_size(int curr_rank) {
     int rest = N % size;
@@ -64,12 +63,10 @@ double get_vector_sqrt(const double *vector) {
     return res;
 }
 
-double *mult_tau_vector(const double *vector) {
-    double *res = calloc(N, sizeof(double));
+void mult_tau_vector(const double *vector, double *res) {
     for (int i = 0; i < N; i++) {
         res[i] = vector[i] * Tau;
     }
-    return res;
 }
 
 double *mult_matrix_vector(const double *matrix, const double *vector) {
@@ -96,27 +93,37 @@ bool is_solved(double *den_vec, double *num_vec) {
     return get_vector_sqrt(den_vec) / get_vector_sqrt(num_vec) < Epsilon;
 }
 
-double *solve_equations(double *matrix, double *vector, double *approximation) {
-    double *result = calloc(N, sizeof(double));
-    bool is_done = is_solved(approximation, vector);
+void subt_in_place(double *result, const double *minus) {
+    for (int i = 0; i < N; i++) {
+        result[i] -= minus[i];
+    }
+}
 
+bool another_is_solved(const double *matrix, const double *vector, double *curr_approximation) {
+    double numerator_sqrt = get_vector_sqrt(vector);
+    double *denominator = mult_matrix_vector(matrix, curr_approximation);
+    subt_in_place(denominator, vector);
+    double denominator_sqrt = get_vector_sqrt(denominator);
+    free(denominator);
+    return denominator_sqrt / numerator_sqrt < Epsilon;
+}
+
+
+void solve_equations(double *matrix, double *vector, double *approximation) {
     do {
-        fprintf(stderr, " now is %d rank: %d \n", is_done, rank);
-        // Ax Ax-b *tau x-tau(Ax-b)
-        double *tmp_Ax = mult_matrix_vector(matrix, approximation);
+        double *tmp;
+        tmp = mult_matrix_vector(matrix, approximation);
         double *Ax = calloc(N, sizeof(double));
-        MPI_Allgatherv(tmp_Ax, chunk_array[rank], MPI_DOUBLE, Ax, chunk_array, shift_array, MPI_DOUBLE, MPI_COMM_WORLD);
+        MPI_Allgatherv(tmp, chunk_array[rank], MPI_DOUBLE, Ax, chunk_array, shift_array, MPI_DOUBLE, MPI_COMM_WORLD);
+        subt_in_place(tmp, vector);
+        double *curr = calloc(N, sizeof(double));
+        mult_tau_vector(tmp, curr);
+        subt_in_place(approximation, curr);
+        free(curr);
+        free(tmp);
 
-        double *Ax_b = subt_vectors(Ax, vector);
-        is_done = is_solved(Ax_b, vector);
-
-        double *tAxminB = mult_tau_vector(Ax_b);
-
-        result = subt_vectors(result, tAxminB);
-        printf("\n");
-    } while (!is_done);
-    parallel_print_result(result);
-    return result;
+    } while (!another_is_solved(matrix, vector, approximation));
+    parallel_print_result(approximation);
 }
 
 
