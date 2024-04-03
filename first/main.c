@@ -131,18 +131,19 @@ int main(int argc, char **argv) {
     double *matrix = malloc(sizeof(*matrix) * N * N);
     double *vector = malloc(sizeof(vector) * N);
     double *initial_approximation = malloc(sizeof(initial_approximation) * N);
-    chunk_array = calloc(size, sizeof(int));
-    shift_array = calloc(size, sizeof(int));
     double start, end;
     fill_all_data(matrix, vector, initial_approximation);
-
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-    calculate_chunk_array();
-    calculate_shift_array();
-
+    fprintf(stderr, "sizeof size: %d rank : %d\n", size, rank);
+    if (rank == 0) {
+        chunk_array = calloc(size, sizeof(int));
+        shift_array = calloc(size, sizeof(int));
+        calculate_chunk_array();
+        calculate_shift_array();
+    }
+    MPI_Barrier(MPI_COMM_WORLD);
     start = MPI_Wtime();
     solve_equations(matrix, vector, initial_approximation);
     end = MPI_Wtime();
