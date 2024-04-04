@@ -5,3 +5,7 @@
 ```bash
 mpiexec -np 4 ./first
 ```
+Исполнение файла под valgrind для определения ошибок
+```bash
+mpiexec -np 4 valgrind ./first
+```

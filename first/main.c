@@ -48,11 +48,11 @@ void fill_all_data(double *matrix, double *vector, double *approximation) {
 
 void parallel_print_result(double *vector) {
     MPI_Barrier(MPI_COMM_WORLD);
-    if (0 == rank) {
-        for (int i = 0; i < N; i++) {
-            printf("%1.1f ", vector[i]);
-        }
+//    if (0 == rank) {
+    for (int i = 0; i < N; i++) {
+        printf("%1.1f ", vector[i]);
     }
+//    }
 }
 
 double get_vector_sqrt(const double *vector) {
@@ -89,19 +89,22 @@ double *subt_vectors(const double *curr, const double *vector) {
 }
 
 void subt_in_place(double *result, const double *minus) {
+
     for (int i = 0; i < N; i++) {
         result[i] -= minus[i];
     }
 }
 
-bool another_is_solved(const double *matrix, const double *vector, double *curr_approximation) {
+bool another_is_solved(const double *matrix, const double *vector, const double *curr_approximation) {
     double numerator_sqrt = get_vector_sqrt(vector);
     double *denominator = mult_matrix_vector(matrix, curr_approximation);
     double *full_den = calloc(N, sizeof(double));
     MPI_Allgatherv(denominator, chunk_array[rank], MPI_DOUBLE, full_den, chunk_array, shift_array, MPI_DOUBLE,
                    MPI_COMM_WORLD);
     subt_in_place(full_den, vector);
-    double denominator_sqrt = get_vector_sqrt(denominator);
+    double denominator_sqrt = get_vector_sqrt(full_den);
+    free(denominator);
+    free(full_den);
     return denominator_sqrt / numerator_sqrt < Epsilon;
 }
 
@@ -111,14 +114,12 @@ void solve_equations(double *matrix, double *vector, double *approximation) {
         double *tmp;
         tmp = mult_matrix_vector(matrix, approximation);
         double *Ax = calloc(N, sizeof(double));
-        fprintf(stderr, "4 i am here\n");
         MPI_Allgatherv(tmp, chunk_array[rank], MPI_DOUBLE, Ax, chunk_array, shift_array, MPI_DOUBLE, MPI_COMM_WORLD);
-        fprintf(stderr, "3 i am here\n");
         subt_in_place(tmp, vector);
-        fprintf(stderr, "2 i am here\n");
         double *curr = calloc(N, sizeof(double));
         mult_tau_vector(tmp, curr);
         subt_in_place(approximation, curr);
+        parallel_print_result(approximation);
         free(curr);
         free(Ax);
         free(tmp);
@@ -126,7 +127,6 @@ void solve_equations(double *matrix, double *vector, double *approximation) {
     } while (!another_is_solved(matrix, vector, approximation));
     parallel_print_result(approximation);
 }
-
 
 int main(int argc, char **argv) {
     double *matrix = malloc(sizeof(*matrix) * N * N);
@@ -137,18 +137,18 @@ int main(int argc, char **argv) {
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    fprintf(stderr, "sizeof size: %d rank : %d\n", size, rank);
     MPI_Barrier(MPI_COMM_WORLD);
-    if (rank == 0) {
-        chunk_array = calloc(size, sizeof(int));
-        shift_array = calloc(size, sizeof(int));
-        calculate_chunk_array();
-        calculate_shift_array();
-    }
-    MPI_Barrier(MPI_COMM_WORLD);
-    fprintf(stderr, "1 i am here\n");
+//    if (rank == 0) { //FIXME
+    chunk_array = calloc(size, sizeof(int));
+    shift_array = calloc(size, sizeof(int));
+    calculate_chunk_array();
+    calculate_shift_array();
+//    }
+    fprintf(stderr, "sizeof size: %d rank : %d curr chunk: %d \n", size, rank, chunk_array[rank]);
     start = MPI_Wtime();
+
     solve_equations(matrix, vector, initial_approximation);
+
     end = MPI_Wtime();
     printf("Time taken for program: %f curr process: %d \n", end - start, rank);
 
