@@ -5,7 +5,7 @@
 
 #define Epsilon 0.00001
 #define Tau 0.00001
-#define N 10
+#define N 10000
 int rank, size;
 
 int calculate_chunk_size(int curr_rank) {
@@ -57,7 +57,6 @@ double *create_vector() {
 }
 
 void parallel_print_result(const double *vector) {
-
     if (rank == 0) {
         printf("System of linear algebraic equations was solved. Check the result:\n");
         for (int i = 0; i < N; i++) {
@@ -118,7 +117,7 @@ void solve_equations(double *matrix, double *vector) {
         MPI_Allgatherv(tmp, chunk_array[rank], MPI_DOUBLE, Ax, chunk_array, shift_array, MPI_DOUBLE, MPI_COMM_WORLD);
         double *Axb = subt_vectors(Ax, vector);
         if (is_solved(Axb, vector)) {
-            parallel_print_result(result);
+            //parallel_print_result(result);
             free(tmp);
             free(Ax);
             free(Axb);

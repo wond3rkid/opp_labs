@@ -6,7 +6,7 @@
 
 #define Epsilon 0.00001
 #define Tau 0.00001
-#define N 1000
+#define N 10000
 
 double *create_matrix() {
     double *matrix = malloc(sizeof(double) * N * N);
