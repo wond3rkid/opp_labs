@@ -3,6 +3,10 @@
 #include <mpi.h>
 #include <math.h>
 
+
+
+
+
 #define Epsilon 0.00001
 #define Tau 0.00001
 #define N 10000
