@@ -3,13 +3,9 @@
 #include <mpi.h>
 #include <math.h>
 
-
-
-
-
 #define Epsilon 0.00001
 #define Tau 0.00001
-#define N 10000
+#define N 10
 int rank, size;
 
 int calculate_chunk_size(int curr_rank) {
@@ -42,14 +38,31 @@ int *calculate_chunk_array() {
     return curr_chunk_array;
 }
 
-double *create_matrix() {
-    double *matrix = malloc(sizeof(double) * N * N);
-    for (int i = 0; i < N; i++) {
-        for (int j = 0; j < N; j++) {
-            matrix[i * N + j] = (i == j) ? 2 : 1;
+void parallel_print_matrix(const double *matrix) {
+    int chunk_size = calculate_chunk_size(rank);
+    for (int proc = 0; proc < size; proc++) {
+        MPI_Barrier(MPI_COMM_WORLD);
+        if (proc == rank) {
+            for (int i = 0; i < chunk_size; i++) {
+                for (int j = 0; j < N; j++) {
+                    printf("%0.0f ", matrix[i * N + j]);
+                }
+                printf("\n");
+            }
         }
     }
-    return matrix;
+}
+
+double *create_matrix() {
+    int chunk_size = calculate_chunk_size(rank);
+    int shift = calculate_shift(rank);
+    double *matrix_chunk = malloc(sizeof(double) * N * chunk_size);
+    for (int i = 0; i < chunk_size; i++) {
+        for (int j = 0; j < N; j++) {
+            matrix_chunk[i * N + j] = (i == (j - shift)) ? 2 : 1;
+        }
+    }
+    return matrix_chunk;
 }
 
 double *create_vector() {
@@ -60,9 +73,8 @@ double *create_vector() {
     return vector;
 }
 
-void parallel_print_result(const double *vector) {
+void parallel_print_vector(const double *vector) {
     if (rank == 0) {
-        printf("System of linear algebraic equations was solved. Check the result:\n");
         for (int i = 0; i < N; i++) {
             printf("%1.1f ", vector[i]);
         }
@@ -121,7 +133,10 @@ void solve_equations(double *matrix, double *vector) {
         MPI_Allgatherv(tmp, chunk_array[rank], MPI_DOUBLE, Ax, chunk_array, shift_array, MPI_DOUBLE, MPI_COMM_WORLD);
         double *Axb = subt_vectors(Ax, vector);
         if (is_solved(Axb, vector)) {
-            //parallel_print_result(result);
+            if (rank == 0) {
+                printf("Result of solving equations: \n");
+            }
+            parallel_print_vector(result);
             free(tmp);
             free(Ax);
             free(Axb);
@@ -142,6 +157,16 @@ int main(int argc, char **argv) {
 
     double *vector = create_vector();
     double *matrix = create_matrix();
+    MPI_Barrier(MPI_COMM_WORLD);
+    if (rank == 0) {
+        printf("Input matrix : \n");
+    }
+    parallel_print_matrix(matrix);
+    MPI_Barrier(MPI_COMM_WORLD);
+    if (rank == 0) {
+        printf("Input vector: \n");
+    }
+    parallel_print_vector(vector);
     double start, end;
 
     start = MPI_Wtime();
