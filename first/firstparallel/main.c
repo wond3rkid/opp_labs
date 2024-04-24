@@ -132,9 +132,7 @@ void solve_equations(double *matrix, double *vector) {
         double *tmp = mult_matrix_vector(matrix, result);
         double *Ax = calloc(N, sizeof(double));
         MPI_Allgatherv(tmp, chunk_array[rank], MPI_DOUBLE, Ax, chunk_array, shift_array, MPI_DOUBLE, MPI_COMM_WORLD);
-        parallel_print_vector(Ax);
         double *Axb = subt_vectors(Ax, vector);
-        parallel_print_vector(Axb);
         if (is_solved(Axb, vector)) {
             if (rank == 0) {
                 printf("Result of solving equations: \n");
@@ -146,10 +144,7 @@ void solve_equations(double *matrix, double *vector) {
             break;
         }
         double *tAxb = mult_tau_vector(Axb);
-        parallel_print_vector(tAxb);
         result = subt_vectors(result, tAxb);
-        parallel_print_vector(result);
-        //sleep(1);
         free(tAxb);
     }
     free(result);
@@ -165,7 +160,7 @@ int main(int argc, char **argv) {
     double *matrix = create_matrix();
     MPI_Barrier(MPI_COMM_WORLD);
     if (rank == 0) {
-        printf("Input matrix : \n");
+        printf("Input matrix N = %d: \n", N);
     }
     parallel_print_matrix(matrix);
     MPI_Barrier(MPI_COMM_WORLD);
