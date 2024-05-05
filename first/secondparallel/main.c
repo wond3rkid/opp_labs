@@ -1,10 +1,11 @@
 #include <stdio.h>
 #include <malloc.h>
 #include <mpi.h>
+#include <stdbool.h>
 
 #define Epsilon 0.00001
 #define Tau  0.00001
-#define N 10000
+#define N 25000
 #define MATRIX_TAG 100
 
 int rank, size;
@@ -26,7 +27,7 @@ int calculate_shift(int curr_rank) {
 }
 
 int *create_displs() {
-    int *temp = calloc(size, sizeof(int));
+    int *temp = (int *) calloc(size, sizeof(int));
     for (int i = 0; i < size; i++) {
         temp[i] = calculate_shift(i);
     }
@@ -34,7 +35,7 @@ int *create_displs() {
 }
 
 int *create_revcounts() {
-    int *temp = calloc(size, sizeof(int));
+    int *temp = (int *) calloc(size, sizeof(int));
     for (int i = 0; i < size; i++) {
         temp[i] = calculate_chunk(i);
     }
@@ -44,7 +45,7 @@ int *create_revcounts() {
 double *create_matrix() {
     int chunk = recvcounts[rank];
     int shift = displs[rank];
-    double *matrix_chunk = calloc(N * chunk, sizeof(double));
+    double *matrix_chunk = (double *) calloc(N * chunk, sizeof(double));
     for (int i = 0; i < chunk; i++) {
         for (int j = 0; j < N; j++) {
             matrix_chunk[i * N + j] = (i == (j - shift)) ? 2 : 1;
@@ -55,7 +56,7 @@ double *create_matrix() {
 
 double *create_vector() {
     int chunk = recvcounts[rank];
-    double *vector_chunk = calloc(chunk, sizeof(double));
+    double *vector_chunk = (double *) calloc(chunk, sizeof(double));
     for (int i = 0; i < chunk; i++) {
         vector_chunk[i] = N + 1;
     }
@@ -102,7 +103,7 @@ double get_vector_sqrt(const double *vector) {
 }
 
 double *subtraction(const double *minuend, const double *subtrahend) {
-    double *res = calloc(recvcounts[rank], sizeof(double));
+    double *res = (double *) calloc(recvcounts[rank], sizeof(double));
     for (int i = 0; i < recvcounts[rank]; i++) {
         res[i] = minuend[i] - subtrahend[i];
     }
@@ -110,7 +111,7 @@ double *subtraction(const double *minuend, const double *subtrahend) {
 }
 
 double *multiplication_tau(const double *vector) {
-    double *res = calloc(recvcounts[rank], sizeof(double));
+    double *res = (double *) calloc(recvcounts[rank], sizeof(double));
     for (int i = 0; i < recvcounts[rank]; i++) {
         res[i] = vector[i] * Tau;
     }
@@ -121,8 +122,8 @@ double *multiplication_matrix_vector(const double *matrix, const double *vector)
     int chunk = recvcounts[rank];
     int temp_size;
 
-    double *tmp = calloc(N / size + 1, sizeof(double));
-    double *res = calloc(chunk, sizeof(double));
+    double *tmp = (double *) calloc(N / size + 1, sizeof(double));
+    double *res = (double *) calloc(chunk, sizeof(double));
     for (int i = 0; i < chunk; i++) {
         tmp[i] = vector[i];
     }
@@ -141,7 +142,7 @@ double *multiplication_matrix_vector(const double *matrix, const double *vector)
 
 void solve_equations(double *matrix, double *vector) {
     double b_sqrt = get_vector_sqrt(vector);
-    double *result = calloc(N, sizeof(double));
+    double *result = (double *) calloc(N, sizeof(double));
     while (true) {
         double *Ax = multiplication_matrix_vector(matrix, result);
         double *Axb = subtraction(Ax, vector);

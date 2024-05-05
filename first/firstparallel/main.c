@@ -7,7 +7,7 @@
 
 #define Epsilon 0.00001
 #define Tau 0.00001
-#define N 10000
+#define N 25000
 int rank, size;
 
 int calculate_chunk_size(int curr_rank) {
