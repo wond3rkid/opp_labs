@@ -3,10 +3,11 @@
 #include <mpi.h>
 #include <math.h>
 #include <unistd.h>
+#include <stdbool.h>
 
 #define Epsilon 0.00001
 #define Tau 0.00001
-#define N 10
+#define N 10000
 int rank, size;
 
 int calculate_chunk_size(int curr_rank) {
@@ -24,7 +25,7 @@ int calculate_shift(int curr_rank) {
 }
 
 int *calculate_shift_array() {
-    int *curr_shift_array = malloc(sizeof(int) * size);
+    int *curr_shift_array = (int *) malloc(sizeof(int) * size);
     for (int i = 0; i < size; i++) {
         curr_shift_array[i] = calculate_shift(i);
     }
@@ -32,7 +33,7 @@ int *calculate_shift_array() {
 }
 
 int *calculate_chunk_array() {
-    int *curr_chunk_array = malloc(sizeof(int) * size);
+    int *curr_chunk_array = (int *) malloc(sizeof(int) * size);
     for (int i = 0; i < size; i++) {
         curr_chunk_array[i] = calculate_chunk_size(i);
     }
@@ -57,7 +58,7 @@ void parallel_print_matrix(const double *matrix) {
 double *create_matrix() {
     int chunk_size = calculate_chunk_size(rank);
     int shift = calculate_shift(rank);
-    double *matrix_chunk = malloc(sizeof(double) * N * chunk_size);
+    double *matrix_chunk = (double *) malloc(sizeof(double) * N * chunk_size);
     for (int i = 0; i < chunk_size; i++) {
         for (int j = 0; j < N; j++) {
             matrix_chunk[i * N + j] = (i == (j - shift)) ? 2 : 1;
@@ -67,7 +68,7 @@ double *create_matrix() {
 }
 
 double *create_vector() {
-    double *vector = malloc(sizeof(double) * N);
+    double *vector = (double *) malloc(sizeof(double) * N);
     for (int i = 0; i < N; i++) {
         vector[i] = N + 1;
     }
@@ -89,11 +90,11 @@ double get_vector_sqrt(const double *vector) {
     for (int i = 0; i < N; i++) {
         res += vector[i] * vector[i];
     }
-    return pow(res, 0.5);
+    return res;
 }
 
 double *mult_tau_vector(const double *vector) {
-    double *res = malloc(N * sizeof(double));
+    double *res = (double *) malloc(N * sizeof(double));
     for (int i = 0; i < N; i++) {
         res[i] = vector[i] * Tau;
     }
@@ -102,7 +103,7 @@ double *mult_tau_vector(const double *vector) {
 
 double *mult_matrix_vector(const double *matrix, const double *vector) {
     int curr_chunk = calculate_chunk_size(rank);
-    double *result = calloc(curr_chunk, sizeof(double));
+    double *result = (double *) calloc(curr_chunk, sizeof(double));
     for (int i = 0; i < curr_chunk; i++) {
         for (int j = 0; j < N; j++) {
             result[i] += matrix[i * N + j] * vector[j];
@@ -112,7 +113,7 @@ double *mult_matrix_vector(const double *matrix, const double *vector) {
 }
 
 double *subt_vectors(const double *curr, const double *vector) {
-    double *res = calloc(N, sizeof(double));
+    double *res = (double *) calloc(N, sizeof(double));
     for (int i = 0; i < N; i++) {
         res[i] = curr[i] - vector[i];
     }
@@ -121,16 +122,16 @@ double *subt_vectors(const double *curr, const double *vector) {
 
 
 bool is_solved(double *axb, double *b) {
-    return get_vector_sqrt(axb) / get_vector_sqrt(b) < Epsilon;
+    return get_vector_sqrt(axb) / get_vector_sqrt(b) < Epsilon * Epsilon;
 }
 
 void solve_equations(double *matrix, double *vector) {
-    double *result = calloc(N, sizeof(double));
+    double *result = (double *) calloc(N, sizeof(double));
     int *chunk_array = calculate_chunk_array();
     int *shift_array = calculate_shift_array();
     while (true) {
         double *tmp = mult_matrix_vector(matrix, result);
-        double *Ax = calloc(N, sizeof(double));
+        double *Ax = (double *) calloc(N, sizeof(double));
         MPI_Allgatherv(tmp, chunk_array[rank], MPI_DOUBLE, Ax, chunk_array, shift_array, MPI_DOUBLE, MPI_COMM_WORLD);
         double *Axb = subt_vectors(Ax, vector);
         if (is_solved(Axb, vector)) {
@@ -154,20 +155,9 @@ int main(int argc, char **argv) {
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Barrier(MPI_COMM_WORLD);
 
     double *vector = create_vector();
     double *matrix = create_matrix();
-    MPI_Barrier(MPI_COMM_WORLD);
-    if (rank == 0) {
-        printf("Input matrix N = %d: \n", N);
-    }
-    parallel_print_matrix(matrix);
-    MPI_Barrier(MPI_COMM_WORLD);
-    if (rank == 0) {
-        printf("Input vector: \n");
-    }
-    parallel_print_vector(vector);
     double start, end;
 
     start = MPI_Wtime();

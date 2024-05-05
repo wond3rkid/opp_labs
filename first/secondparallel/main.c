@@ -4,7 +4,7 @@
 
 #define Epsilon 0.00001
 #define Tau  0.00001
-#define N 10
+#define N 10000
 #define MATRIX_TAG 100
 
 int rank, size;
@@ -148,7 +148,7 @@ void solve_equations(double *matrix, double *vector) {
         double axb_sqrt = get_vector_sqrt(Axb);
         if (axb_sqrt / b_sqrt < Epsilon * Epsilon) {
             printf("System of linear algebraic equations was solved. Check the result for proc %d:\n", rank);
-            parallel_print_vector(result);
+            //parallel_print_vector(result);
             free(Ax);
             free(Axb);
             break;
@@ -171,18 +171,6 @@ int main(int argc, char **argv) {
 
     double *vector = create_vector();
     double *matrix = create_matrix();
-
-    if (rank == 0) {
-        printf("Input matrix with size = %d: \n", N);
-    }
-    parallel_print_matrix(matrix);
-    MPI_Barrier(MPI_COMM_WORLD);
-    if (rank == 0) {
-        printf("\nInput vector: \n");
-    }
-    parallel_print_vector(vector);
-    MPI_Barrier(MPI_COMM_WORLD);
-
     double start = MPI_Wtime();
     solve_equations(matrix, vector);
     double end = MPI_Wtime();
