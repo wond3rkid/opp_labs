@@ -1,9 +1,5 @@
-
-
-
 #include <mpi.h>
 #include <stdio.h>
-#include <time.h>
 #include <stdlib.h>
 #include <assert.h>
 
@@ -16,16 +12,6 @@ void create_known_filling(double *matrix, int r, int c) {
     for (int i = 0; i < r; i++) {
         for (int j = 0; j < c; j++) {
             matrix[i * r + c] = i == j ? 1 : 0;
-        }
-    }
-}
-
-void create_rand_filling(double *matrix, int r, int c) {
-    assert(matrix != NULL);
-    srand(time(NULL));
-    for (int i = 0; i < r; i++) {
-        for (int j = 0; j < c; j++) {
-            matrix[i * r + c] = rand() % 5;
         }
     }
 }
@@ -44,18 +30,26 @@ void multiplicate(const double *first, const double *second, double *result, int
     }
 }
 
+void print_matrix(const double *first, const int r, const int c) {
+    for (int i = 0; i < r; i++) {
+        for (int j = 0; j < c; j++) {
+            printf("%2.2f ", first[i * r + c]);
+        }
+        printf("\n");
+    }
+    printf("\n");
+}
+
 int main(int argc, char **argv) {
     if (argc != 3) {
         fprintf(stderr, "Input error");
         return EXIT_FAILURE;
     }
-    // инициализация mpi
     MPI_Init(&argc, &argv);
     int rank, size;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm comm, row_comm, column_comm;
-    //
     int x, y;
     x = atoi(argv[1]);
     y = atoi(argv[2]);
@@ -96,7 +90,9 @@ int main(int argc, char **argv) {
             MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
         }
         create_known_filling(a, N1, N2);
+        print_matrix(a, N1, N2);
         create_known_filling(b, N2, N3);
+        print_matrix(b, N2, N3);
     }
     if (coords[1] == 0) {
         MPI_Scatter(a, N1 * N2 / x, MPI_DOUBLE, a_part, N1 * N2 / x, MPI_DOUBLE, 0, column_comm);
@@ -110,51 +106,57 @@ int main(int argc, char **argv) {
     MPI_Type_vector(N1 / x, N3 / y, N3, MPI_DOUBLE, &c_type);
     MPI_Type_commit(&c_type);
 
-    if (rank == 0) {
-        for (int i = 1; i < row_size; i++) {
-            MPI_Send(b + i * N3 / y, 1, col_comm, i, 0, row_comm);
-        }
+//    if (rank == 0) {
+//        assert(b != NULL);
+//        for (int i = 1; i < row_size; i++) {
+//            // scatter + how vector works
+//            MPI_Send(b + i * N3 / y, 1, col_comm, i, 0, row_comm);
+//        }
+//
+//        for (int i = 0; i < N2; i++) {
+//            for (int j = 0; j < N3 / y; j++) {
+//                b_part[i * N3 / y + j] = b[i * N3 + j];
+//            }
+//        }
+//    } else if (coords[0] == 0) {
+//        MPI_Recv(b_part, N3 * N2 / y, MPI_DOUBLE, 0, 0, row_comm, MPI_STATUS_IGNORE);
+//    }
+        MPI_Scatter(b, N2 * N3 / y, MPI_DOUBLE, b_part, N2 * N3 / y, MPI_DOUBLE, 0, row_comm);
+        MPI_Bcast(a_part, N1 * N2 / x, MPI_DOUBLE, 0, row_comm);
+        MPI_Bcast(b_part, N2 * N3 / y, MPI_DOUBLE, 0, column_comm);
+        multiplicate(a_part, b_part, c_part, N1 / x, N3 / y, N2);
 
-        for (int i = 0; i < N2; i++) {
-            for (int j = 0; j < N3 / y; j++) {
-                b_part[i * N3 / y + j] = b[i * N3 + j];
+        if (rank != 0) {
+            MPI_Send(c_part, N3 * N1 / y / x, MPI_DOUBLE, 0, 1, MPI_COMM_WORLD);
+        } else {
+            assert(c != NULL);
+            for (int i = 0; i < N1 / x; i++) {
+                for (int j = 0; j < N3 / y; j++) {
+                    c[i * N3 + j] = c_part[i * N3 / y + j];
+                }
             }
+            for (int i = 0; i < x; i++) {
+                for (int j = 0; j < y; j++) {
+                    // gather
+                    if (i != 0 || j != 0) {
+                        MPI_Recv(c + i * N3 * N1 / x + j * N3 / y, 1, c_type, i * y + j, 1, MPI_COMM_WORLD,
+                                 MPI_STATUS_IGNORE);
+                    }
+                }
+            }
+            print_matrix(c, N1, N3);
+            double finish_time = MPI_Wtime();
+            fprintf(stdout, "time %lf \n ", finish_time - start_time);
+            free(a);
+            free(b);
+            free(c);
         }
-    } else if (coords[0] == 0) {
-        MPI_Recv(b_part, N3 * N2 / y, MPI_DOUBLE, 0, 0, row_comm, MPI_STATUS_IGNORE);
+        free(a_part);
+        free(b_part);
+        free(c_part);
+        MPI_Type_free(&col_comm);
+        MPI_Type_free(&c_type);
+        MPI_Finalize();
+        return EXIT_SUCCESS;
     }
-
-    MPI_Bcast(a_part, N1 * N2 / x, MPI_DOUBLE, 0, row_comm);
-    MPI_Bcast(b_part, N2 * N3 / y, MPI_DOUBLE, 0, column_comm);
-    multiplicate(a_part, b_part, c_part, N1 / x, N3 / y, N2);
-
-    if (rank != 0) {
-        MPI_Send(c_part, N3 * N1 / y / x, MPI_DOUBLE, 0, 1, MPI_COMM_WORLD);
-    } else {
-        for (int i = 0; i < N1 / x; i++) {
-            for (int j = 0; j < N3 / y; j++) {
-                c[i * N3 + j] = c_part[i * N3 / y + j];
-            }
-        }
-        for (int i = 0; i < x; i++) {
-            for (int j = 0; j < y; j++) {
-                if (i != 0 || j != 0)
-                    MPI_Recv(c + i * N3 * N1 / x + j * N3 / y, 1, c_type, i * y + j, 1, MPI_COMM_WORLD,
-                             MPI_STATUS_IGNORE);
-            }
-        }
-        //free(a);
-        //free(b);
-        //free(c);
-    }
-    double finish_time = MPI_Wtime();
-    fprintf(stdout, "proc %d time %lf \n ", rank, finish_time - start_time);
-    //free(a_part);
-    //free(b_part);
-    //free(c_part);
-    MPI_Type_free(&col_comm);
-    MPI_Type_free(&c_type);
-    MPI_Finalize();
-    return EXIT_SUCCESS;
-}
 
