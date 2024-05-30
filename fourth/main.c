@@ -13,26 +13,28 @@
 int rank, size;
 double h_x, h_y, h_z;
 //размеры сетки
-const int Nx = 256, Ny = 256, Nz = 256;
+const int Nx = 512, Ny = 512, Nz = 512;
 // границы куба
 const double min_x = -1, min_y = -1, min_z = -1;
 const double max_x = 1, max_y = 1, max_z = 1;
 const double Dx = max_x - min_x, Dy = max_y - min_y, Dz = max_z - min_z;
 
+//  обертка для максимума
 double max_abs(double a, double b) {
     return fabs(a) > fabs(b) ? fabs(a) : fabs(b);
 }
 
-//вычисление значения фи
+// вычисление значения фи
 double calculate_phi(double x, double y, double z) {
     return x * x + y * y + z * z;
 }
 
-//вычисление ро
+// вычисление ро
 double calculate_ro(double x, double y, double z) {
     return 6 - alpha * calculate_phi(x, y, z);
 }
 
+// обертка для подсчета индекса
 int calculate_index(int i, int j, int k) {
     return i * Ny * Nx + j * Nx + k;
 }
@@ -63,6 +65,7 @@ void initialize_grid(double *grid, int z_part, int start_layer) {
     }
 }
 
+// обновляем слой линейки и получаем из неё дельту по формула
 double update_layer_get_delta(int start_layer, int curr_z, double *grid, double *tmp_grid) {
     int d_index = start_layer + curr_z;
     if (is_bound(d_index, Nz)) {
@@ -70,7 +73,7 @@ double update_layer_get_delta(int start_layer, int curr_z, double *grid, double 
         return 0;
     }
     double delta = 0; // максимальное изменение значения
-    double curr_z_coord = min_z + d_index * h_z; // текущая координата по Z
+    double curr_z_coord = min_z + d_index * h_z; // текущая координата по z
     for (int i = 0; i < Nx; i++) {
         double curr_x = min_x + i * h_x;
         for (int j = 0; j < Ny; j++) {
@@ -97,6 +100,7 @@ int is_solved(double delta) {
     return delta < epsilon ? 1 : 0;
 }
 
+// подсчет точности ответа относительно фи
 void calculate_accuracy(double *result) {
     double delta = 0;
     for (int i = 0; i < Nz; i++) {
@@ -136,8 +140,10 @@ void calculate_jacobi(double *grid, double *tmp_grid, int start_layer, int z_par
             MPI_Irecv(tmp_grid, Nx * Ny, MPI_DOUBLE, rank - 1, MY_MPI_TAG, MPI_COMM_WORLD, &requests[1]);
         }
         if (rank != size - 1) {
-            MPI_Isend(tmp_grid + z_part * Nx * Ny, Nx * Ny, MPI_DOUBLE, rank + 1, MY_MPI_TAG, MPI_COMM_WORLD, &requests[2]);
-            MPI_Irecv(tmp_grid + (z_part + 1) * Nx * Ny, Nx * Ny, MPI_DOUBLE, rank + 1, MY_MPI_TAG, MPI_COMM_WORLD, &requests[3]);
+            MPI_Isend(tmp_grid + z_part * Nx * Ny, Nx * Ny, MPI_DOUBLE, rank + 1, MY_MPI_TAG, MPI_COMM_WORLD,
+                      &requests[2]);
+            MPI_Irecv(tmp_grid + (z_part + 1) * Nx * Ny, Nx * Ny, MPI_DOUBLE, rank + 1, MY_MPI_TAG, MPI_COMM_WORLD,
+                      &requests[3]);
         }
 
         for (int i = 2; i < z_part; i++) {
@@ -164,7 +170,7 @@ void calculate_jacobi(double *grid, double *tmp_grid, int start_layer, int z_par
 
     double *result = NULL;
     if (rank == 0) {
-        result = (double *)malloc(sizeof(double) * Nx * Ny * Nz);
+        result = (double *) malloc(sizeof(double) * Nx * Ny * Nz);
     }
 
     MPI_Gather(grid + Nx * Ny, z_part * Nx * Ny, MPI_DOUBLE, result, z_part * Nx * Ny, MPI_DOUBLE, 0, MPI_COMM_WORLD);
@@ -194,8 +200,8 @@ int main(int argc, char **argv) {
     h_z = Dz / (Nz - 1);
 
     int z_part = Nz / size;
-    double *grid = (double *)malloc(sizeof(double) * (z_part + 2) * Nx * Ny);
-    double *tmp_grid = (double *)malloc(sizeof(double) * (z_part + 2) * Nx * Ny);
+    double *grid = (double *) malloc(sizeof(double) * (z_part + 2) * Nx * Ny);
+    double *tmp_grid = (double *) malloc(sizeof(double) * (z_part + 2) * Nx * Ny);
 
     int start_layer = rank * z_part - 1;
     initialize_grid(grid, z_part, start_layer);
