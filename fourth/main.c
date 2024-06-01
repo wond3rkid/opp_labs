@@ -97,6 +97,9 @@ double update_layer_get_delta(int start_layer, int curr_z, double *grid, double 
 }
 
 int is_solved(double delta) {
+    if (rank == 0) {
+        fprintf(stdout, "Curr delta : %lf \n", delta);
+    }
     return delta < epsilon ? 1 : 0;
 }
 
@@ -122,9 +125,12 @@ void calculate_accuracy(double *result) {
     }
 }
 
-void calculate_jacobi(double *grid, double *tmp_grid, int start_layer, int z_part) {
+
+double *calculate_jacobi(double *grid, double *tmp_grid, int start_layer, int z_part) {
     double delta = epsilon + 1;
+    int iteration = 0;
     do {
+        iteration++;
         double new_delta = 0;
         delta = 0;
 
@@ -159,22 +165,31 @@ void calculate_jacobi(double *grid, double *tmp_grid, int start_layer, int z_par
             MPI_Wait(&requests[2], MPI_STATUS_IGNORE);
             MPI_Wait(&requests[3], MPI_STATUS_IGNORE);
         }
-
-        memcpy(grid, tmp_grid, (z_part + 2) * Nx * Ny * sizeof(double));
+        double *tmp = grid;
+        grid = tmp_grid;
+        tmp_grid = tmp;
+        //swap
+        //memcpy(grid, tmp_grid, (z_part + 2) * Nx * Ny * sizeof(double));
         double max_delta;
 
         MPI_Allreduce(&delta, &max_delta, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
         delta = max_delta;
 
     } while (!is_solved(delta));
+    fprintf(stdout, "Iterations: %d  \n", iteration);
+    if (iteration % 2 == 1) {
+        return tmp_grid;
+    }
+    return grid;
+}
 
+void handle_result(double *grid, int z_part) {
     double *result = NULL;
     if (rank == 0) {
         result = (double *) malloc(sizeof(double) * Nx * Ny * Nz);
     }
-
     MPI_Gather(grid + Nx * Ny, z_part * Nx * Ny, MPI_DOUBLE, result, z_part * Nx * Ny, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-
+    // не замерять
     if (rank == 0) {
         calculate_accuracy(result);
         free(result);
@@ -205,13 +220,14 @@ int main(int argc, char **argv) {
 
     int start_layer = rank * z_part - 1;
     initialize_grid(grid, z_part, start_layer);
-    calculate_jacobi(grid, tmp_grid, start_layer, z_part);
-
+    initialize_grid(tmp_grid, z_part, start_layer);
+    double *res = calculate_jacobi(grid, tmp_grid, start_layer, z_part);
     double end = MPI_Wtime();
+    handle_result(res, z_part);
+
     if (rank == 0) {
         fprintf(stdout, "Time taken: %lf seconds\n", end - start);
     }
-
     free(grid);
     free(tmp_grid);
     MPI_Finalize();
