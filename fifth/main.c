@@ -1,3 +1,4 @@
+#include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
@@ -7,6 +8,7 @@
 #define MAX_TASKS 900
 #define ITERATIONS_COUNT 40
 #define MY_MPI_TAG 123
+
 int *tasks;
 int size;
 int rank;
@@ -17,12 +19,14 @@ pthread_mutex_t mutex;
 struct job_requester {
     int tasks_done;
     int curr_res;
+    int weight;
 };
 
-// Функция для выполнения заданий ok
+// Функция для выполнения заданий
 struct job_requester do_job(int length) {
     int res = 0;
     int tasks_done = 0;
+    int weight_done = 0;
     struct job_requester req;
 
     while (1) {
@@ -37,38 +41,48 @@ struct job_requester do_job(int length) {
         int weight = tasks[current_offset];
 
         for (int j = 0; j < weight; j++) {
-            res += (int) sqrt(j);
+            res += (int)sqrt(j);
         }
         tasks_done++;
+        weight_done += weight;
     }
     req.curr_res = res;
     req.tasks_done = tasks_done;
+    req.weight = weight_done;
     return req;
 }
 
-// Функция для инициализации задач, установление веса задач. волна задач
-void set_tasks(int iter_count) {
+// Функция для инициализации задач, установление веса задач
+void set_tasks(int iter_count, int rank, int size, int *tasks) {
+    int rank_weight = 0;
     for (int i = 0; i < size * MAX_TASKS; i++) {
         tasks[i] = abs(50 - i % 100) * abs(rank - iter_count % size);
+        rank_weight += tasks[i];
+    }
+    fprintf(stdout, "rank : %d | full weight : %d \n", rank, rank_weight);
+    int total_weight = 0;
+    MPI_Allreduce(&rank_weight, &total_weight, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+    if (rank == 0) {
+        fprintf(stdout, "allreduceed total weight : %d \n", total_weight);
     }
 }
 
 // Функция для запроса задач у других процессов
 struct job_requester request_tasks() {
-    struct job_requester final_result = {0, 0};
+    struct job_requester final_result = {0, 0, 0};
 
     for (int i = 0; i < size; i++) {
-        if (i == rank) { 
-            continue; 
+        if (i == rank) {
+            continue;
         }
         int req_code = 0;
         int help;
 
         MPI_Send(&req_code, 1, MPI_INT, i, MY_MPI_TAG, MPI_COMM_WORLD);
-        MPI_Recv(&help, 1, MPI_INT, i, 3333, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(&help, 1, MPI_INT, i, MY_MPI_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
         if (help > 0) {
-            MPI_Recv(tasks, help, MPI_INT, i, 3333, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Recv(tasks, help, MPI_INT, i, MY_MPI_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
             pthread_mutex_lock(&mutex);
             offset = 0;
@@ -77,9 +91,15 @@ struct job_requester request_tasks() {
             struct job_requester partial_result = do_job(help);
             final_result.curr_res += partial_result.curr_res;
             final_result.tasks_done += partial_result.tasks_done;
+            final_result.weight += partial_result.weight;
+            if (partial_result.weight == 0) {
+                fprintf(stdout, "proc : %d, weight : %d \n", rank, partial_result.weight);
+            }
         }
     }
-
+    if (final_result.weight == 0) {
+        fprintf(stdout, "proc : %d, weight : %d \n", rank, final_result.weight);
+    }
     return final_result;
 }
 
@@ -105,12 +125,16 @@ void do_tasks() {
 
     int tasks_done = res1.tasks_done + res2.tasks_done;
     int curr_res = res1.curr_res + res2.curr_res;
+    int total_weight = res1.weight + res2.weight;
+
     int res = 0;
+    int all_weights = 0;
 
     MPI_Allreduce(&curr_res, &res, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(&total_weight, &all_weights, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 
     double work_time = end - start;
-    fprintf(stdout, "rank: %d, | tasks done: %d | res = %d | time: %f \n", rank, tasks_done, res, work_time);
+    fprintf(stdout, "rank: %d, | tasks done: %d | res = %d | weight: %d | time: %f \n", rank, tasks_done, res, total_weight, work_time);
 
     MPI_Gather(&work_time, 1, MPI_DOUBLE, times, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
@@ -119,15 +143,17 @@ void do_tasks() {
         find_max_and_min(times, size, &max, &min);
         double disbalance_time = max - min;
         fprintf(stdout, "disbalance time: %f \n", disbalance_time);
+        fprintf(stdout, "total weight from all processes: %d\n", all_weights);
     }
 }
 
 // Функция потока для выполнения задач
 void *work(void *arg) {
+    // i 0 0
     for (int i = 0; i < ITERATIONS_COUNT; i++) {
         pthread_mutex_lock(&mutex);
         offset = 0;
-        set_tasks(i);
+        set_tasks(i, rank, size, tasks);
         pthread_mutex_unlock(&mutex);
         do_tasks();
     }
@@ -152,10 +178,9 @@ void *listen(void *arg) {
         size_t length = size * MAX_TASKS;
 
         pthread_mutex_lock(&mutex);
-        int new_offset = offset + (int) ((length - offset) * 0.1);
+        int new_offset = offset + (int)((length - offset) * 0.1);
         int tasks_length = new_offset - offset;
         pthread_mutex_unlock(&mutex);
-
         MPI_Send(&tasks_length, 1, MPI_INT, st.MPI_SOURCE, 3333, MPI_COMM_WORLD);
 
         if (tasks_length > 0) {
@@ -180,9 +205,9 @@ int main(int argc, char *argv[]) {
     double start = MPI_Wtime();
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    tasks = (int *) malloc(size * MAX_TASKS * sizeof(int));
+    tasks = (int *)malloc(size * MAX_TASKS * sizeof(int));
     if (rank == 0) {
-        times = (double *) malloc(size * sizeof(double));
+        times = (double *)malloc(size * sizeof(double));
     }
 
     pthread_t worker, listener;
